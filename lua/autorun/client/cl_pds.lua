@@ -6,7 +6,7 @@ local pds_hud_x = CreateClientConVar('pds_hud_x', '0', true, false)
 local pds_hud_y = CreateClientConVar('pds_hud_y', '0', true, false)
 local pds_hud_alpha = CreateClientConVar('pds_hud_alpha', '0.8', true, false)
 local pds_hud_mat = CreateClientConVar('pds_hud_mat', 'pds/warning.png', true, false)
-local pds_sound = CreateClientConVar('pds_sound', '', true, false)
+local pds_sound = CreateClientConVar('pds_sound', 'pds/radar.wav', true, false)
 
 local pds_hud_nodraw = CreateClientConVar('pds_hud_nodraw', '0', true, false)
 local pds_slient = CreateClientConVar('pds_slient', '0', true, false)
@@ -46,7 +46,7 @@ hook.Add("Initialize", "pdsInit", function()
     timer.Create("pdsListenBarValue", 0.1, 0, function()
         local currentValue = LocalPlayer():GetNWFloat('pds_bar', 0)
         
-        if barLastValue == 0 and currentValue ~= barLastValue and !pds_slient:GetBool() and #hunters < 1 then
+        if barLastValue <= pds_height:GetFloat() + 0.0001 and currentValue ~= barLastValue and !pds_slient:GetBool() and #hunters < 1 then
             local sound = pds_sound:GetString()
             if sound ~= "" then 
                 surface.PlaySound(sound)

@@ -2,12 +2,12 @@ CreateConVar('pds_gravity', '1', { FCVAR_ARCHIVE, FCVAR_CLIENTCMD_CAN_EXECUTE, F
 CreateConVar('pds_height', '0', { FCVAR_ARCHIVE, FCVAR_CLIENTCMD_CAN_EXECUTE, FCVAR_NOTIFY, FCVAR_SERVER_CAN_EXECUTE })
 
 if CLIENT then
-	CreateClientConVar('pds_hud_size', '150', true, false)
+	CreateClientConVar('pds_hud_size', '300', true, false)
 	CreateClientConVar('pds_hud_x', '0', true, false)
 	CreateClientConVar('pds_hud_y', '0', true, false)
 	CreateClientConVar('pds_hud_alpha', '0.8', true, false)
 	CreateClientConVar('pds_hud_mat', 'pds/warning.png', true, false)
-	CreateClientConVar('pds_sound', '', true, false)
+	CreateClientConVar('pds_sound', 'pds/radar.wav', true, false)
 
 	CreateClientConVar('pds_hud_nodraw', '0', true, false)
 	CreateClientConVar('pds_slient', '0', true, false)
