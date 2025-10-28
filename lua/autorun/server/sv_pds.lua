@@ -1,5 +1,57 @@
 local pds_gravity = CreateConVar('pds_gravity', '1', { FCVAR_ARCHIVE, FCVAR_CLIENTCMD_CAN_EXECUTE, FCVAR_NOTIFY, FCVAR_SERVER_CAN_EXECUTE })
 local pds_height = CreateConVar('pds_height', '0', { FCVAR_ARCHIVE, FCVAR_CLIENTCMD_CAN_EXECUTE, FCVAR_NOTIFY, FCVAR_SERVER_CAN_EXECUTE })
+local pds_los_level = CreateConVar('pds_los_level', '3', { FCVAR_ARCHIVE, FCVAR_CLIENTCMD_CAN_EXECUTE, FCVAR_NOTIFY, FCVAR_SERVER_CAN_EXECUTE })
+
+local pds_los_level1 = {
+	14, 15, 16,
+	9, 10, 11,
+	0
+}
+
+local pds_los_level2 = {
+	14, 15, 16,
+	9, 10, 11,
+	0, 
+	23, 24,
+	19, 20
+}
+
+// 6	ValveBiped.Bip01_Head1
+// 14	ValveBiped.Bip01_L_UpperArm
+// 15	ValveBiped.Bip01_L_Forearm
+// 16	ValveBiped.Bip01_L_Hand
+// 9	ValveBiped.Bip01_R_UpperArm
+// 10	ValveBiped.Bip01_R_Forearm
+// 11	ValveBiped.Bip01_R_Hand
+// 22	ValveBiped.Bip01_L_Thigh
+// 23	ValveBiped.Bip01_L_Calf
+// 24	ValveBiped.Bip01_L_Foot
+// 25	ValveBiped.Bip01_L_Toe0
+// 18	ValveBiped.Bip01_R_Thigh
+// 19	ValveBiped.Bip01_R_Calf
+// 20	ValveBiped.Bip01_R_Foot
+// 21	ValveBiped.Bip01_R_Toe0
+// 0	ValveBiped.Bip01_Pelvis
+// 3	ValveBiped.Bip01_Spine2
+// 6	ValveBiped.Bip01_Head1
+// 14	ValveBiped.Bip01_L_UpperArm
+// 15	ValveBiped.Bip01_L_Forearm
+// 16	ValveBiped.Bip01_L_Hand
+// 9	ValveBiped.Bip01_R_UpperArm
+// 10	ValveBiped.Bip01_R_Forearm
+// 11	ValveBiped.Bip01_R_Hand
+// 22	ValveBiped.Bip01_L_Thigh
+// 23	ValveBiped.Bip01_L_Calf
+// 24	ValveBiped.Bip01_L_Foot
+// 25	ValveBiped.Bip01_L_Toe0
+// 18	ValveBiped.Bip01_R_Thigh
+// 19	ValveBiped.Bip01_R_Calf
+// 20	ValveBiped.Bip01_R_Foot
+// 21	ValveBiped.Bip01_R_Toe0
+// 0	ValveBiped.Bip01_Pelvis
+// 3	ValveBiped.Bip01_Spine2
+
+
 
 local function InitNpcSensitivityTable()
     local tableName = "stealth_npcsensitivity"
@@ -87,7 +139,7 @@ hook.Add("Initialize", "pdsInit", function()
 	table.CopyFromTo(merged, npcSensitivity_list)
 end)
 
-local function CheckLOSSimple(ply,npc)
+local function CheckLOSSimple(ply,npc,level)
 
 	if !npc:TestPVS(ply) then return false end
 	
@@ -105,15 +157,53 @@ local function CheckLOSSimple(ply,npc)
 	end]]
 	
 	if ply:IsPlayer() then
-		for i = 0, ply:GetHitboxSetCount()-1 do -- Having to make two loops just to get the hitbox positions is stupid.
-			for o = 0, ply:GetHitBoxCount(i)-1 do
-				local tr = util.TraceLine{
-					start = npc:EyePos(),
-					endpos = ply:GetBonePosition(ply:GetHitBoxBone(o,i)),
-					filter = npc,
-					mask = MASK_BLOCKLOS_AND_NPCS
-				}
-				if tr.Entity == ply then return true end
+		if level == 3 then 
+			for i = 0, ply:GetHitboxSetCount()-1 do -- Having to make two loops just to get the hitbox positions is stupid.
+				for o = 0, ply:GetHitBoxCount(i)-1 do
+					local tr = util.TraceLine{
+						start = npc:EyePos(),
+						endpos = ply:GetBonePosition(ply:GetHitBoxBone(o,i)),
+						filter = npc,
+						mask = MASK_BLOCKLOS_AND_NPCS
+					}
+					if tr.Entity == ply then return true end
+				end
+			end
+		else
+			local tr = util.TraceLine{
+				start = npc:EyePos(),
+				endpos = ply:EyePos(),
+				filter = npc,
+				mask = MASK_BLOCKLOS_AND_NPCS
+			}
+			if tr.Entity == ply then return true end
+
+			if level == 1 then
+				for _, v in ipairs(pds_los_level1) do
+					local endpos = ply:GetBonePosition(v)
+					if endpos == nil then continue end
+
+					local tr = util.TraceLine{
+						start = npc:EyePos(),
+						endpos = endpos,
+						filter = npc,
+						mask = MASK_BLOCKLOS_AND_NPCS
+					}
+					if tr.Entity == ply then return true end
+				end
+			elseif level == 2 then
+				for _, v in ipairs(pds_los_level2) do
+					local endpos = ply:GetBonePosition(v)
+					if endpos == nil then continue end
+
+					local tr = util.TraceLine{
+						start = npc:EyePos(),
+						endpos = endpos,
+						filter = npc,
+						mask = MASK_BLOCKLOS_AND_NPCS
+					}
+					if tr.Entity == ply then return true end
+				end
 			end
 		end
 	else
@@ -131,7 +221,7 @@ local function CheckLOSSimple(ply,npc)
 	
 end
 
-local function CheckLOSAdvanced(ply, npc)
+local function CheckLOSAdvanced(ply, npc, level)
 	if tobool(stealthmod.CVarCache.ai_disabled) or tobool(stealthmod.CVarCache.ai_ignoreplayers) then return end
 	if IsValid(ply) and ply:IsFlagSet(FL_NOTARGET) then return end
 	
@@ -155,7 +245,7 @@ local function CheckLOSAdvanced(ply, npc)
 	--if multiplier < 0 then multiplier = 0 end
 	
 
-	local isvisible = CheckLOSSimple(ply,npc)
+	local isvisible = CheckLOSSimple(ply,npc,level)
 		
 	-- ConVar to number
 	local alerttime = math.max(tonumber(stealthmod.CVarCache.stealth_alerttime), 0)
@@ -236,7 +326,7 @@ local function CheckLOSAdvanced(ply, npc)
 	end
 end
 
-local function checkEntityLOS(ent, npc)
+local function checkEntityLOS(ent, npc, level)
 	if tobool(stealthmod.CVarCache.ai_disabled) then return -1 end
 	-- Variables
 	local minsight = tonumber(stealthmod.CVarCache.stealth_minsight)
@@ -244,7 +334,7 @@ local function checkEntityLOS(ent, npc)
 	local multiplier = tonumber(stealthmod.CVarCache.stealth_multiplier)
 
 	--local isvisible = CheckNPCLOStoEntity(ent,npc)
-	local isvisible = CheckLOSSimple(ent,npc) -- Also works for props and ragdolls.
+	local isvisible = CheckLOSSimple(ent,npc,level) -- Also works for props and ragdolls.
 	local eyesang = npc:EyeAngles() or npc:GetAngles()
 	local yawdiff = 0
 	
@@ -271,7 +361,8 @@ local period = 0.25
 hook.Add("Initialize", "pdsInit2", function()
 	timer.Create("NPCStealthThink",period,0,function() 
 		if !tobool(stealthmod.CVarCache.stealth_enabled) then return end
-		
+
+		local los_level = pds_los_level:GetInt()
 		local pds_barAdditive = {}
 		for _, ply in pairs(player.GetAll()) do
 			pds_barAdditive[ply:EntIndex()] = -math.abs(pds_gravity:GetFloat())
@@ -284,7 +375,7 @@ hook.Add("Initialize", "pdsInit2", function()
 				end
 				
 				for o,p in ipairs(player.GetAll()) do
-					local isvisible = CheckLOSAdvanced(p,v)
+					local isvisible = CheckLOSAdvanced(p,v,los_level)
 					if isvisible then
 						pds_barAdditive[p:EntIndex()] = math.max(pds_barAdditive[p:EntIndex()], npcSensitivity_list[v:GetClass()] or 1)
 					end
@@ -307,7 +398,7 @@ hook.Add("Initialize", "pdsInit2", function()
 					
 					if v.stealth_thingsseen[p:EntIndex()] == p then continue end
 					
-					local dist = checkEntityLOS(p,v)
+					local dist = checkEntityLOS(p,v,los_level)
 					if dist == -1 then continue end
 					
 					if p:GetClass() == "footprint" then
@@ -333,7 +424,7 @@ hook.Add("Initialize", "pdsInit2", function()
 					
 					if v.stealth_thingsseen[p:EntIndex()] == p then continue end
 					
-					local dist = checkEntityLOS(p,v)
+					local dist = checkEntityLOS(p,v,los_level)
 					if dist == -1 then continue end
 					
 					stealthmod.NPCInvestigate(v, p, false, 1)

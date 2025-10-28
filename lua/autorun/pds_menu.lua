@@ -1,5 +1,6 @@
 CreateConVar('pds_gravity', '1', { FCVAR_ARCHIVE, FCVAR_CLIENTCMD_CAN_EXECUTE, FCVAR_NOTIFY, FCVAR_SERVER_CAN_EXECUTE })
 CreateConVar('pds_height', '0', { FCVAR_ARCHIVE, FCVAR_CLIENTCMD_CAN_EXECUTE, FCVAR_NOTIFY, FCVAR_SERVER_CAN_EXECUTE })
+CreateConVar('pds_los_level', '3', { FCVAR_ARCHIVE, FCVAR_CLIENTCMD_CAN_EXECUTE, FCVAR_NOTIFY, FCVAR_SERVER_CAN_EXECUTE })
 
 if CLIENT then
 	CreateClientConVar('pds_hud_size', '300', true, false)
@@ -40,6 +41,9 @@ if CLIENT then
 			language.GetPhrase('pds.menu.servername'), '', '', 
 			function(panel)
 				panel:Clear()
+				panel:NumSlider('#pds.los_level', 'pds_los_level', 0, 3, 0)
+				panel:ControlHelp('#pds.help.los_level')
+
 				panel:NumSlider('#pds.gravity', 'pds_gravity', 0.1, 5, 2)
 				panel:ControlHelp('#pds.help.gravity')
 
