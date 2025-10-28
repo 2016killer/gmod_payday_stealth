@@ -104,17 +104,27 @@ local function CheckLOSSimple(ply,npc)
 		if tr.Entity == ply then return true end
 	end]]
 	
-	
-	for i = 0, ply:GetHitboxSetCount()-1 do -- Having to make two loops just to get the hitbox positions is stupid.
-		for o = 0, ply:GetHitBoxCount(i)-1 do
-			local tr = util.TraceLine{
-				start = npc:EyePos(),
-				endpos = ply:GetBonePosition(ply:GetHitBoxBone(o,i)),
-				filter = npc,
-				mask = MASK_BLOCKLOS_AND_NPCS
-			}
-			if tr.Entity == ply then return true end
+	if ply:IsPlayer() then
+		for i = 0, ply:GetHitboxSetCount()-1 do -- Having to make two loops just to get the hitbox positions is stupid.
+			for o = 0, ply:GetHitBoxCount(i)-1 do
+				local tr = util.TraceLine{
+					start = npc:EyePos(),
+					endpos = ply:GetBonePosition(ply:GetHitBoxBone(o,i)),
+					filter = npc,
+					mask = MASK_BLOCKLOS_AND_NPCS
+				}
+				if tr.Entity == ply then return true end
+			end
 		end
+	else
+		-- 对于尸体等不需要精细检测
+		local tr = util.TraceLine{
+			start = npc:EyePos(),
+			endpos = ply:GetPos(),
+			filter = npc,
+			mask = MASK_BLOCKLOS_AND_NPCS
+		}
+		if tr.Entity == ply then return true end
 	end
 	
 	return false
