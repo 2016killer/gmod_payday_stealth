@@ -1,6 +1,6 @@
 CreateConVar('pds_gravity', '1', { FCVAR_ARCHIVE, FCVAR_CLIENTCMD_CAN_EXECUTE, FCVAR_NOTIFY, FCVAR_SERVER_CAN_EXECUTE })
 CreateConVar('pds_height', '0', { FCVAR_ARCHIVE, FCVAR_CLIENTCMD_CAN_EXECUTE, FCVAR_NOTIFY, FCVAR_SERVER_CAN_EXECUTE })
-CreateConVar('pds_los_level', '3', { FCVAR_ARCHIVE, FCVAR_CLIENTCMD_CAN_EXECUTE, FCVAR_NOTIFY, FCVAR_SERVER_CAN_EXECUTE })
+CreateConVar('pds_los_level', '1', { FCVAR_ARCHIVE, FCVAR_CLIENTCMD_CAN_EXECUTE, FCVAR_NOTIFY, FCVAR_SERVER_CAN_EXECUTE })
 
 if CLIENT then
 	CreateClientConVar('pds_hud_size', '300', true, false)
@@ -30,6 +30,19 @@ if CLIENT then
 
 				panel:CheckBox('#pds.hud_nodraw', 'pds_hud_nodraw')
 				panel:CheckBox('#pds.slient', 'pds_slient')
+
+				local resetButton = panel:Button('#default', '')
+				resetButton.DoClick = function()
+					RunConsoleCommand('pds_hud_size', '300')
+					RunConsoleCommand('pds_hud_x', '0')
+					RunConsoleCommand('pds_hud_y', '0')
+					RunConsoleCommand('pds_hud_alpha', '0.8')
+					RunConsoleCommand('pds_hud_mat', 'pds/warning.png')
+					RunConsoleCommand('pds_sound', 'pds/radar.wav')
+
+					RunConsoleCommand('pds_hud_nodraw', '0')
+					RunConsoleCommand('pds_slient', '0')
+				end
 			end
 		)
 	end)
@@ -50,6 +63,12 @@ if CLIENT then
 				panel:NumSlider('#pds.height', 'pds_height', 0, 1, 3)
 				panel:ControlHelp('#pds.help.height')
 
+				local resetButton = panel:Button('#default', '')
+				resetButton.DoClick = function()
+					RunConsoleCommand('pds_los_level', '1')
+					RunConsoleCommand('pds_gravity', '1')
+					RunConsoleCommand('pds_height', '0')
+				end
 
 
 				local actualList = {}
@@ -184,6 +203,12 @@ if CLIENT then
 							node:Remove()
 							actualList[node:GetText()] = nil
 						end
+
+						local value = vgui.Create("DLabel", node)
+						value:SetSize(50,18)
+						value:SetPos(150,0)
+						value:SetText(tostring(v))
+						value:SetColor(Color(0, 100, 170))
 						
 						if type(v) == "table" then
 							for a, b in pairs(v) do
