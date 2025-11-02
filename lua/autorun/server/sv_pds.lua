@@ -427,8 +427,11 @@ local function CheckLOSAdvanced(ply, npc, level)
 		local simplemodel = player_manager.TranslateToPlayerModelName(ply:GetModel())
 		if disguises_list[npc:GetClass()] and disguises_list[npc:GetClass()][simplemodel] then 
 		--if disguises_list[npc:GetClass()] and disguises_list[npc:GetClass()][ply:GetModel()] then 
-			for _, a in ipairs(ply.Footprints.age) do
-				npc.stealth_thingsseen[a:EntIndex()] = a
+			-- ?
+			if istable(ply.Footprints) and istable(ply.Footprints.age) then 
+				for _, a in ipairs(ply.Footprints.age) do
+					npc.stealth_thingsseen[a:EntIndex()] = a
+				end
 			end
 			
 			sightrange = 0
