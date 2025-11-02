@@ -43,6 +43,12 @@ if CLIENT then
 					RunConsoleCommand('pds_hud_nodraw', '0')
 					RunConsoleCommand('pds_slient', '0')
 				end
+
+				local reloadDisguisesButton = panel:Button('#default', '')
+				reloadDisguisesButton.DoClick = function()
+					RunConsoleCommand('pds_reload_disguises')
+				end
+
 			end
 		)
 	end)

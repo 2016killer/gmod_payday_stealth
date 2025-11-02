@@ -50,25 +50,146 @@ local pds_los_level2 = {
 // 21	ValveBiped.Bip01_R_Toe0
 // 0	ValveBiped.Bip01_Pelvis
 // 3	ValveBiped.Bip01_Spine2
+local disguises_list = {}
 
+local disguises_default = 
+{
+	["npc_combine_s"] = {
+		["combine"] = true,
+		["combineprison"] = true,
+		["combineelite"] = true,
+		["police"] = true,
+		["policefem"] = true,
+		["stripped"] = true,
+	},
+	["npc_metropolice"] = {
+		["combine"] = true,
+		["combineprison"] = true,
+		["combineelite"] = true,
+		["police"] = true,
+		["policefem"] = true,
+		["stripped"] = true,
+	},
+	["npc_citizen"] = {
+		["male01"] = true,
+		["male02"] = true,
+		["male03"] = true,
+		["male04"] = true,
+		["male05"] = true,
+		["male06"] = true,
+		["male07"] = true,
+		["male08"] = true,
+		["male09"] = true,
+		["male10"] = true,
+		["male11"] = true,
+		["male12"] = true,
+		["male13"] = true,
+		["male14"] = true,
+		["male15"] = true,
+		["male16"] = true,
+		["male17"] = true,
+		["male18"] = true,
+		
+		["female01"] = true,
+		["female02"] = true,
+		["female03"] = true,
+		["female04"] = true,
+		["female05"] = true,
+		["female06"] = true,
+		["female07"] = true,
+		["female08"] = true,
+		["female09"] = true,
+		["female10"] = true,
+		["female11"] = true,
+		["female12"] = true,
+		
+		["medic01"] = true,
+		["medic02"] = true,
+		["medic03"] = true,
+		["medic04"] = true,
+		["medic05"] = true,
+		["medic06"] = true,
+		["medic07"] = true,
+		["medic08"] = true,
+		["medic09"] = true,
+		["medic10"] = true,
+		["medic11"] = true,
+		["medic12"] = true,
+		["medic13"] = true,
+		["medic14"] = true,
+		["medic15"] = true,
+		
+		["refugee01"] = true,
+		["refugee02"] = true,
+		["refugee03"] = true,
+		["refugee04"] = true,
+		
+		["alyx"] = true,
+		["eli"] = true,
+		["mossman"] = true,
+		["mossmanarctic"] = true,
+		["magnusson"] = true,
+		["kleiner"] = true,
+		["freeman"] = true,
+		["monk"] = true,
+		["gman"] = true
+	}
+}
+
+local function stealth_load_disguises_file()
+	local default, target = disguises_default, disguises_list
+	
+	local loadFromDisk = {}
+	local contents = sql.Query("SELECT * FROM stealth_disguises")
+	if contents ~= nil then 
+		if contents[1].value == "1" then
+			for k, v in ipairs(contents) do
+				loadFromDisk[v.key] = true
+			end
+		else
+			for k, v in ipairs(contents) do
+				local exploded = string.Explode(",", v.value)
+				loadFromDisk[v.key] = {}
+				for _,b in ipairs(exploded) do
+					loadFromDisk[v.key][b] = true
+				end
+			end
+		end
+	end
+	
+
+	local merged = table.Merge(default, loadFromDisk)
+	table.CopyFromTo( merged, target )
+
+	print("Payday Stealth Mod: loaded list 'disguises'")
+	hook.Run("PaydayStealthModReloadDisguises", disguises_list)
+end
+
+concommand.Add("pds_reload_disguises", function()
+	stealth_load_disguises_file()
+end)
+
+function pdsGetDisguisesList()
+	return disguises_list
+end
 
 
 local function InitNpcSensitivityTable()
     local tableName = "stealth_npcsensitivity"
-    print("Stealth Mod: 检查新表 '" .. tableName .. "' 的完整性...")
+    print("Payday Stealth Mod: 检查新表 '" .. tableName .. "' 的完整性...")
 
     if !sql.TableExists(tableName) then
-        print("Stealth Mod: 表 '" .. tableName .. "' 不存在，正在创建...")
+        print("Payday Stealth Mod: 表 '" .. tableName .. "' 不存在，正在创建...")
         local createQuery = "CREATE TABLE " .. tableName .. "(key TEXT NOT NULL PRIMARY KEY, value REAL)"
         if sql.Query(createQuery) == false then
-            ErrorNoHalt("Stealth Mod: 创建表 '" .. tableName .. "' 失败：" .. sql.LastError())
+            ErrorNoHalt("Payday Stealth Mod: 创建表 '" .. tableName .. "' 失败：" .. sql.LastError())
         end
         return
     end
 
     local contents = sql.Query("SELECT * FROM " .. tableName)
     if contents == false then
-        ErrorNoHalt("Stealth Mod: 查询表 '" .. tableName .. "' 失败：" .. sql.LastError())
+        ErrorNoHalt("Payday Stealth Mod: 查询表 '" .. tableName .. "' 失败：" .. sql.LastError())
         return
     end
 
@@ -76,7 +197,7 @@ local function InitNpcSensitivityTable()
         local toText = util.TableToJSON(contents, true)
         local compressed = util.Compress(toText)
         if #compressed > 65530 then
-            print("Stealth Mod: 表 '" .. tableName .. "' 数据过大！正在备份并重置...")
+            print("Payday Stealth Mod: 表 '" .. tableName .. "' 数据过大！正在备份并重置...")
             
             if !file.IsDir("stealth/backup", "DATA") then
                 file.CreateDir("stealth/backup")
@@ -86,7 +207,7 @@ local function InitNpcSensitivityTable()
         end
     end
 
-    print("Stealth Mod: 新表 '" .. tableName .. "' 完整性检查完成。")
+    print("Payday Stealth Mod: 新表 '" .. tableName .. "' 完整性检查完成。")
 end
 
 local function ReadNpcSensitivity()
@@ -118,7 +239,7 @@ local function WriteNpcSensitivity(contents)
             local query = "INSERT INTO stealth_npcsensitivity" .. " VALUES (" .. safeKey .. ", " .. tempValue .. ")"
 
             if sql.Query(query) == false then
-                ErrorNoHalt("Stealth Mod: " .. sql.LastError() .. "\n")
+                ErrorNoHalt("Payday Stealth Mod: " .. sql.LastError() .. "\n")
             end
         end
     sql.Commit()
@@ -137,6 +258,8 @@ hook.Add("Initialize", "pdsInit", function()
 	local loadFromDisk = ReadNpcSensitivity()
 	local merged = table.Merge(npcSensitivity_default, loadFromDisk)
 	table.CopyFromTo(merged, npcSensitivity_list)
+
+	stealth_load_disguises_file()
 end)
 
 local function CheckLOSSimple(ply,npc,level)
@@ -508,7 +631,7 @@ net.Receive('pdsNpcSensitivityData', function(len, ply)
 	local compressed = util.Compress(json)
 	
 	// if #compressed > 65530 then
-	// 	error("Stealth Mod: Table 'stealth_"..source.."' is too big! Creating a backup (in garrysmod/data/stealth) and resetting!")
+	// 	error("Payday Stealth Mod: Table 'stealth_"..source.."' is too big! Creating a backup (in garrysmod/data/stealth) and resetting!")
 		
 	// 	if !file.IsDir("stealth/backup", "DATA") then
 	// 		file.CreateDir("stealth/backup")
